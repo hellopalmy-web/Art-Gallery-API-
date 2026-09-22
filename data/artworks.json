@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "title": "The Starry Night",
+    "artist": "Vincent van Gogh",
+    "year": 1889,
+    "category": "Painting",
+    "description": "A famous painting depicting a night sky.",
+    "image": "http://localhost:3000/images/starry_night.jpg"
+  },
+  {
+    "id": 2,
+    "title": "The Thinker",
+    "artist": "Auguste Rodin",
+    "year": 1904,
+    "category": "Sculpture",
+    "description": "A bronze sculpture depicting a man in deep thought.",
+    "image": "http://localhost:3000/images/The_Thinker.jpg"
+  },
+  {
+    "id": 3,
+    "title": "Girl with a Pearl Earring",
+    "artist": "Johannes Vermeer",
+    "year": 1665,
+    "category": "Painting",
+    "description": "A portrait of a girl wearing an exotic turban and a large pearl earring.",
+    "image": "http://localhost:3000/images/gwape.jpg"
+  },
+  {
+    "id": 4,
+    "title": "Mona Lisa",
+    "artist": "Leonardo da Vinci",
+    "year": 1503,
+    "category": "Painting",
+    "description": "A half-length portrait painting.",
+    "image": "http://localhost:3000/images/Mona_Lisa.jpg.webp"
+  }
+]
