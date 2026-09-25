@@ -1,19 +1,29 @@
 {
-  "name": "art-gallery-api",
+  "name": "art-gallery",
   "version": "1.0.0",
-  "description": "REST API พื้นฐานสำหรับจัดเก็บและแสดงข้อมูลผลงานศิลปะ ใช้ JSON file เป็นฐานข้อมูลชั่วคราว",
+  "description": "Art Gallery — Express API + static frontend, deployed on Vercel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node server.js"
   },
-  "keywords": [
-    "rest-api",
-    "express",
-    "art-gallery"
-  ],
-  "license": "MIT",
+  "engines": {
+    "node": ">=18.x"
+  },
   "dependencies": {
-    "express": "^4.19.2"
-  }
+    "cors": "^2.8.6",
+    "express": "^4.22.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hellopalmy-web/Art-Gallery-API.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/hellopalmy-web/Art-Gallery-API/issues"
+  },
+  "homepage": "https://github.com/hellopalmy-web/Art-Gallery-API#readme"
 }

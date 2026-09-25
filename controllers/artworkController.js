@@ -4,20 +4,28 @@
 const fs = require("fs");
 const path = require("path");
 
-// path ของไฟล์ JSON ที่ใช้เป็นฐานข้อมูลชั่วคราว
+// path ของไฟล์ JSON ที่ใช้เป็นฐานข้อมูลชั่วคราว (ไฟล์ต้นทางที่ deploy มากับโค้ด)
 const dataFilePath = path.join(__dirname, "..", "data", "artworks.json");
 
 // -------- Helper Functions --------
 
+// เลือก path ที่จะอ่าน/เขียนจริง: ใช้ path ที่ server.js เตรียมไว้ใน
+// req.app.locals.dataFilePath ถ้ามี (จะชี้ไป /tmp เมื่อรันบน Vercel เพราะ
+// filesystem จริงเขียนไม่ได้ และชี้ไปที่ dataFilePath ปกติเวลารัน local)
+// ถ้าไม่มี req (เผื่อเรียกจากที่อื่นนอก request) ให้ใช้ dataFilePath เป็นค่า default
+function resolveDataFilePath(req) {
+  return (req && req.app && req.app.locals && req.app.locals.dataFilePath) || dataFilePath;
+}
+
 // อ่านข้อมูลทั้งหมดจากไฟล์ JSON แล้วแปลงเป็น array ของ object
-function readArtworks() {
-  const rawData = fs.readFileSync(dataFilePath, "utf-8");
+function readArtworks(req) {
+  const rawData = fs.readFileSync(resolveDataFilePath(req), "utf-8");
   return JSON.parse(rawData);
 }
 
 // เขียนข้อมูล array ของ artwork กลับลงไปในไฟล์ JSON
-function writeArtworks(artworks) {
-  fs.writeFileSync(dataFilePath, JSON.stringify(artworks, null, 2), "utf-8");
+function writeArtworks(req, artworks) {
+  fs.writeFileSync(resolveDataFilePath(req), JSON.stringify(artworks, null, 2), "utf-8");
 }
 
 // หา id ล่าสุดในไฟล์ แล้ว +1 เพื่อใช้เป็น id ของ artwork ใหม่
@@ -32,7 +40,7 @@ function getNextId(artworks) {
 // GET /api/artworks
 // แสดงผลงานศิลปะทั้งหมด
 function getAllArtworks(req, res) {
-  const artworks = readArtworks();
+  const artworks = readArtworks(req);
   res.status(200).json({
     success: true,
     total: artworks.length,
@@ -54,7 +62,7 @@ function searchArtworks(req, res) {
     });
   }
 
-  const artworks = readArtworks();
+  const artworks = readArtworks(req);
   const keyword = query.toLowerCase();
 
   const results = artworks.filter(
@@ -74,7 +82,7 @@ function searchArtworks(req, res) {
 // แสดงผลงานตาม category (ไม่สนตัวพิมพ์เล็ก/ใหญ่)
 function getArtworksByCategory(req, res) {
   const { category } = req.params;
-  const artworks = readArtworks();
+  const artworks = readArtworks(req);
 
   const results = artworks.filter(
     (artwork) => artwork.category.toLowerCase() === category.toLowerCase()
@@ -91,7 +99,7 @@ function getArtworksByCategory(req, res) {
 // แสดงรายละเอียดผลงานศิลปะตาม ID
 function getArtworkById(req, res) {
   const id = parseInt(req.params.id);
-  const artworks = readArtworks();
+  const artworks = readArtworks(req);
 
   const artwork = artworks.find((item) => item.id === id);
 
@@ -121,7 +129,7 @@ function createArtwork(req, res) {
     });
   }
 
-  const artworks = readArtworks();
+  const artworks = readArtworks(req);
 
   const newArtwork = {
     id: getNextId(artworks),
@@ -134,7 +142,7 @@ function createArtwork(req, res) {
   };
 
   artworks.push(newArtwork);
-  writeArtworks(artworks);
+  writeArtworks(req, artworks);
 
   res.status(201).json({
     success: true,
@@ -147,7 +155,7 @@ function createArtwork(req, res) {
 // แก้ไขข้อมูลผลงานศิลปะ
 function updateArtwork(req, res) {
   const id = parseInt(req.params.id);
-  const artworks = readArtworks();
+  const artworks = readArtworks(req);
 
   const index = artworks.findIndex((item) => item.id === id);
 
@@ -180,7 +188,7 @@ function updateArtwork(req, res) {
   };
 
   artworks[index] = updatedArtwork;
-  writeArtworks(artworks);
+  writeArtworks(req, artworks);
 
   res.status(200).json({
     success: true,
@@ -193,7 +201,7 @@ function updateArtwork(req, res) {
 // ลบผลงานศิลปะ
 function deleteArtwork(req, res) {
   const id = parseInt(req.params.id);
-  const artworks = readArtworks();
+  const artworks = readArtworks(req);
 
   const index = artworks.findIndex((item) => item.id === id);
 
@@ -205,7 +213,7 @@ function deleteArtwork(req, res) {
   }
 
   artworks.splice(index, 1);
-  writeArtworks(artworks);
+  writeArtworks(req, artworks);
 
   // 204 No Content: ลบสำเร็จ ไม่มีข้อมูลส่งกลับ
   res.status(204).send();

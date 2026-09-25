@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Art Gallery</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <section class="history-section">
+
+    <div class="section-header">
+
+        <h2>Recently Viewed</h2>
+
+        <button
+            id="backButton"
+            class="queue-button"
+        >
+            Back
+        </button>
+
+    </div>
+
+
+    <div id="historyContainer">
+
+        <p>
+            No recently viewed artworks.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- Header -->
+<header class="header">
+    <div class="logo">
+        ART<span>GALLERY</span>
+    </div>
+
+    <p class="subtitle">
+        Discover beautiful artworks from around the world
+    </p>
+</header>
+
+
+<!-- Main Content -->
+<main class="container">
+
+    <!-- Hero -->
+    <section class="hero">
+        <p class="small-title">WELCOME TO</p>
+
+        <h1>
+            Art Gallery
+        </h1>
+
+        <p>
+            Explore a collection of timeless artworks,
+            famous artists and beautiful stories.
+        </p>
+    </section>
+
+
+    <!-- Search & Filter -->
+    <section class="controls">
+
+        <div class="search-box">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search artwork or artist..."
+            >
+
+            <button id="searchButton">
+                Search
+            </button>
+        </div>
+
+
+        <div class="filter-box">
+            <label for="categoryFilter">
+                Category
+            </label>
+
+            <select id="categoryFilter">
+                <option value="all">
+                    All Categories
+                </option>
+            </select>
+        </div>
+
+        <div class="sort-box">
+            <label for="sortSelect">
+                Sort
+            </label>
+
+            <select id="sortSelect">
+                <option value="default">
+                    Default
+                </option>
+
+                <option value="title-asc">
+                    Title A → Z
+                </option>
+
+                <option value="title-desc">
+                    Title Z → A
+                </option>
+
+                <option value="year-asc">
+                    Year: Old → New
+                </option>
+
+                <option value="year-desc">
+                    Year: New → Old
+                </option>
+            </select>
+        </div>
+
+    </section>
+
+
+    <!-- Gallery -->
+    <section>
+
+        <div class="section-header">
+            <h2>Artworks</h2>
+
+            <p id="resultCount">
+                Loading...
+            </p>
+        </div>
+
+
+        <div
+            id="artworkContainer"
+            class="gallery"
+        >
+            <!-- Artwork cards will appear here -->
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- Detail Modal -->
+<div
+    id="detailModal"
+    class="modal hidden"
+>
+
+    <div class="modal-content">
+
+        <button
+            id="closeModal"
+            class="close-button"
+        >
+            ×
+        </button>
+
+        <img
+            id="detailImage"
+            src=""
+            alt="Artwork"
+        >
+
+        <div class="detail-info">
+
+            <span
+                id="detailCategory"
+                class="category"
+            >
+            </span>
+
+            <h2 id="detailTitle">
+            </h2>
+
+            <p class="artist">
+                <strong>Artist:</strong>
+                <span id="detailArtist"></span>
+            </p>
+
+            <p>
+                <strong>Year:</strong>
+                <span id="detailYear"></span>
+            </p>
+
+            <p
+                id="detailDescription"
+                class="description"
+            ></p>
+
+            <button
+                id="addToQueueButton"
+                class="queue-button"
+            >
+                Add to Queue
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<section class="queue-section">
+
+    <div class="section-header">
+
+        <h2>Viewing Queue</h2>
+
+        <button
+            id="viewNextButton"
+            class="queue-button"
+        >
+            View Next
+        </button>
+
+    </div>
+
+    <div id="queueContainer">
+        <p>No artworks in queue.</p>
+    </div>
+
+</section>
+
+
+<!-- JavaScript -->
+<script src="script.js"></script>
+
+</body>
+</html>
