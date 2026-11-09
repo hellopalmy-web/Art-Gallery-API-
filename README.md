@@ -2,6 +2,18 @@
 
 แกลเลอรี React + Vite พร้อม REST API ที่เขียนด้วย Node.js + Express.js และใช้ไฟล์ JSON เป็นฐานข้อมูลชั่วคราว
 
+## ตารางส่วนร่วม
+
+| ชื่อ-สกุล | รหัสนักศึกษา | ชิ้นงานที่รับผิดชอบ (ไฟล์ / component / route / DSA) | ช่วงที่นำเสนอในคลิป |
+|---|---|---|---|
+| นาย ชานน คำเเสนโคมร (git: chanonkamsan / GitHub: chanonkamsan-tech) | 681310776 | **หน้าบ้านและ UI/UX:** `frontend/index.html`, `frontend/style.css`, `frontend/src/components/BackgroundFX.jsx`; ส่วนหน้าจอใน `frontend/src/App.jsx` ได้แก่ Home (`/`), Collection (`/collection`), Your Visit (`/your-visit`), การ์ดผลงาน, modal, สถานะ loading/empty/error, Favorites, Clear all, Sort by, สลับภาษา EN/TH และ intro | ช่วงที่ 1 (เปิดและตารางส่วนร่วม ~0:30)<br>ช่วงที่ 3 (Demo ระบบจริง/UX ~2:00)<br>ช่วงที่ 4 (อธิบายโค้ด React: ตาราง useState, useEffect, Component Tree และ props ~2:00)<br>**รวม ~4:30 นาที** |
+| นางสาว อมลณัฐ เอื้อวัชโร (git: palmy / GitHub: hellopalmy-web) | 681310414 | **หลังบ้านและ DSA:** `backend/server.js`, `backend/routes/artworkRoutes.js`, `backend/controllers/artworkController.js`, `backend/middleware/`, `backend/services/`, `backend/data/`, `backend/tests/`; `frontend/searchUtils.js` และ `frontend/tests/`; Graph + BFS ใน `frontend/src/Graph.js` และ `frontend/src/components/GraphNav.jsx`; `frontend/src/main.jsx` (HashRouter); `vite.config.js`, `vercel.json`, `README.md`, `docs/before-after/` และ `selectionSort` ใน `frontend/src/App.jsx`<br>**ส่วนที่ทำร่วมกันใน `frontend/src/App.jsx`:** การต่อ `Routes`/`Route`/`Navigate`, `GraphNav`/`Breadcrumb` และ `pagePath`; Effect โหลด `/api/artworks` พร้อมจัดการ loading/error/retry และ state ข้อมูลที่รับจาก API | ช่วงที่ 2 (จากงานแรกสู่งานนี้: Before/After ~1:00)<br>ช่วงที่ 4 (Graph.js กับ nav ~1:00)<br>ช่วงที่ 5 (Express และ DSA พร้อม Big-O ~2:00)<br>ช่วงที่ 6 (สรุป ~0:30)<br>**รวม ~4:30 นาที** |
+
+หมายเหตุ:
+1. ตารางนี้ตรงกับ commit history ใน GitHub ของโปรเจกต์ (ส่วน UI อยู่ระหว่างรอ commit)
+2. สมาชิกทั้งสองคนช่วยกันทดสอบและตรวจทานทุกส่วน ตารางระบุชิ้นงานหลักที่แต่ละคนรับผิดชอบ
+3. ทุกคนแนะนำชื่อและรหัสนักศึกษาก่อนเริ่มพูดในแต่ละช่วงของคลิป
+
 ## ข้อแนะนำจากงานแรก → สิ่งที่แก้
 
 | ข้อแนะนำจากงานแรก | สิ่งที่แก้ในงานนี้ | หลักฐาน Before / After |
