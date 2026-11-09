@@ -3,6 +3,8 @@
 //   node = หน้าเว็บ (Home, Collection, Your Visit)
 //   edge = เมนู/ลิงก์ที่พาจากหน้าหนึ่งไปอีกหน้าหนึ่ง (มีทิศทาง)
 
+import { Queue } from "./dsa/Queue.js";
+
 export class Graph {
     constructor() {
         // id -> ข้อมูลของหน้า { id, path, label, labelTh }
@@ -64,11 +66,11 @@ export class Graph {
         if (start === goal) return [start];
 
         const parent = new Map([[start, null]]); // ใช้เป็น visited ด้วย
-        const queue = [start];
-        let head = 0; // ใช้ตัวชี้แทน shift() เพื่อให้ dequeue เป็น O(1)
+        const queue = new Queue();
+        queue.enqueue(start);
 
-        while (head < queue.length) {
-            const current = queue[head++];
+        while (!queue.isEmpty()) {
+            const current = queue.dequeue();
             for (const next of this.adjacency.get(current)) {
                 if (parent.has(next)) continue;
                 parent.set(next, current);
@@ -77,7 +79,7 @@ export class Graph {
                     for (let id = goal; id !== null; id = parent.get(id)) path.push(id);
                     return path.reverse();
                 }
-                queue.push(next);
+                queue.enqueue(next);
             }
         }
         return null;

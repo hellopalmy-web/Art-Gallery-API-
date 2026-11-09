@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import GraphNav, { Breadcrumb } from "./components/GraphNav.jsx";
 import BackgroundFX from "./components/BackgroundFX.jsx";
+import { Queue } from "./dsa/Queue.js";
+import { Stack } from "./dsa/Stack.js";
+import { getLegacyTieRanks, mergeSort } from "./dsa/sort.js";
 import { pagePath } from "./Graph.js";
 import "../searchUtils.js";
 
@@ -92,23 +95,17 @@ function shouldShowIntro() {
     return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function selectionSort(items, compare) {
-    const sortedItems = [...items];
-    for (let index = 0; index < sortedItems.length - 1; index += 1) {
-        let smallestIndex = index;
-        for (let candidate = index + 1; candidate < sortedItems.length; candidate += 1) {
-            if (compare(sortedItems[candidate], sortedItems[smallestIndex]) < 0) {
-                smallestIndex = candidate;
-            }
-        }
-        if (smallestIndex !== index) {
-            [sortedItems[index], sortedItems[smallestIndex]] = [sortedItems[smallestIndex], sortedItems[index]];
-        }
-    }
-    return sortedItems;
-}
-
 export default function App() {
+    const recentlyViewedStackRef = useRef(null);
+    const viewingQueueRef = useRef(null);
+    if (recentlyViewedStackRef.current === null) {
+        recentlyViewedStackRef.current = new Stack(getStoredList("artGalleryRecentlyViewed"), 40);
+    }
+    if (viewingQueueRef.current === null) {
+        viewingQueueRef.current = new Queue();
+        getStoredList("artGalleryViewingQueue").forEach((artwork) => viewingQueueRef.current.enqueue(artwork));
+    }
+
     const [artworks, setArtworks] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("all");
@@ -116,8 +113,8 @@ export default function App() {
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [recentlyViewed, setRecentlyViewed] = useState(() => getStoredList("artGalleryRecentlyViewed"));
-    const [viewingQueue, setViewingQueue] = useState(() => getStoredList("artGalleryViewingQueue"));
+    const [recentlyViewed, setRecentlyViewed] = useState(() => recentlyViewedStackRef.current.toArray());
+    const [viewingQueue, setViewingQueue] = useState(() => viewingQueueRef.current.toArray());
     const [favorites, setFavorites] = useState(getStoredFavorites);
     const [language, setLanguage] = useState(() => localStorage.getItem("artGalleryLanguage") === "th" ? "th" : "en");
     const [selectedArtwork, setSelectedArtwork] = useState(null);
@@ -134,6 +131,7 @@ export default function App() {
     const [introPhase, setIntroPhase] = useState(() => shouldShowIntro() ? "loading" : "done");
     const [introProgress, setIntroProgress] = useState(0);
     const [heroRevealed, setHeroRevealed] = useState(() => !shouldShowIntro());
+    const favoriteIds = useMemo(() => new Set(favorites.map((artwork) => String(artwork.id))), [favorites]);
     const hasLoaded = useRef(false);
     const cardRefs = useRef(new Map());
     const highlightTimer = useRef(null);
@@ -298,14 +296,20 @@ export default function App() {
             return matchesQuery && matchesCategory;
         });
 
-        return selectionSort(base, (first, second) => {
+        const compareArtworks = (first, second) => {
             if (sortOrder.startsWith("year")) {
                 const difference = Number(first.year || 0) - Number(second.year || 0);
                 return sortOrder === "year-desc" ? -difference : difference;
             }
             const difference = String(first.title || "").localeCompare(String(second.title || ""), undefined, { sensitivity: "base" });
             return sortOrder === "title-desc" ? -difference : difference;
-        });
+        };
+        const legacyRanks = getLegacyTieRanks(base, compareArtworks);
+        const decorated = base.map((artwork, index) => ({ artwork, index }));
+        return mergeSort(decorated, (first, second) => {
+            const order = compareArtworks(first.artwork, second.artwork);
+            return order || legacyRanks.get(first.index) - legacyRanks.get(second.index);
+        }).map(({ artwork }) => artwork);
     }, [artworks, searchQuery, selectedCategory, sortOrder, selectedArtworkId]);
 
     const pageSize = 12;
@@ -326,8 +330,30 @@ export default function App() {
         setToast({ type, message, key: Date.now() });
     }
 
+    function mutateRecentlyViewed(operation) {
+        const stack = recentlyViewedStackRef.current;
+        const result = operation(stack);
+        setRecentlyViewed(stack.toArray());
+        return result;
+    }
+
+    function mutateViewingQueue(operation) {
+        const queue = viewingQueueRef.current;
+        const result = operation(queue);
+        setViewingQueue(queue.toArray());
+        return result;
+    }
+
     function addToRecentlyViewed(artwork) {
-        setRecentlyViewed((current) => [artwork, ...current.filter((item) => String(item.id) !== String(artwork.id))].slice(0, 40));
+        mutateRecentlyViewed((stack) => {
+            const withoutDuplicate = stack.toArray()
+                .filter((item) => String(item.id) !== String(artwork.id));
+            stack.clear();
+            for (let index = withoutDuplicate.length - 1; index >= 0; index -= 1) {
+                stack.push(withoutDuplicate[index]);
+            }
+            stack.push(artwork);
+        });
     }
 
     function openArtwork(artwork, source = "collection") {
@@ -353,10 +379,9 @@ export default function App() {
                 addToRecentlyViewed(queueSequence[nextIndex]);
                 return;
             }
-            if (direction > 0 && viewingQueue.length) {
-                const nextArtwork = viewingQueue[0];
+            if (direction > 0 && !viewingQueueRef.current.isEmpty()) {
+                const nextArtwork = mutateViewingQueue((queue) => queue.dequeue());
                 const nextSequence = [...queueSequence, nextArtwork];
-                setViewingQueue((current) => current.slice(1));
                 setQueueSequence(nextSequence);
                 setModalIndex(nextSequence.length - 1);
                 setSelectedArtwork(nextArtwork);
@@ -374,20 +399,19 @@ export default function App() {
     }
 
     function viewNextFromQueue() {
-        if (!viewingQueue.length) {
+        if (viewingQueueRef.current.isEmpty()) {
             showToast("error", t("emptyQueue"));
             return;
         }
-        const [first, ...rest] = viewingQueue;
-        setViewingQueue(rest);
+        const first = mutateViewingQueue((queue) => queue.dequeue());
         openArtwork(first, "queue");
     }
 
     function goBackArtwork() {
-        if (recentlyViewed.length < 2) return;
+        if (recentlyViewedStackRef.current.size() < 2) return;
 
-        const previousArtwork = recentlyViewed[1];
-        setRecentlyViewed((current) => current.slice(1));
+        mutateRecentlyViewed((stack) => stack.pop());
+        const previousArtwork = recentlyViewedStackRef.current.peek();
         setSelectedArtwork(previousArtwork);
         setModalSource("collection");
         setModalIndex(filteredArtworks.findIndex((item) => String(item.id) === String(previousArtwork.id)));
@@ -395,16 +419,16 @@ export default function App() {
     }
 
     function handleQueueAdd(artwork) {
-        if (viewingQueue.some((item) => String(item.id) === String(artwork.id))) {
+        if (viewingQueueRef.current.toArray().some((item) => String(item.id) === String(artwork.id))) {
             showToast("error", t("duplicate"));
             return;
         }
-        setViewingQueue((current) => [...current, artwork]);
+        mutateViewingQueue((queue) => queue.enqueue(artwork));
         showToast("success", t("added"));
     }
 
     function toggleFavorite(artwork) {
-        const exists = favorites.some((item) => String(item.id) === String(artwork.id));
+        const exists = favoriteIds.has(String(artwork.id));
         setFavorites((current) => exists
             ? current.filter((item) => String(item.id) !== String(artwork.id))
             : [...current, artwork]);
@@ -425,7 +449,7 @@ export default function App() {
         setSelectedArtworkId(null);
     }
 
-    const isFavorite = (id) => favorites.some((artwork) => String(artwork.id) === String(id));
+    const isFavorite = (id) => favoriteIds.has(String(id));
 
     return (
         <div className="app-shell">
@@ -603,21 +627,25 @@ export default function App() {
                         <section className="visit-section" aria-label={t("visit")}>
                     <VisitPanel eyebrow={t("historyEyebrow")} title={t("history")} action={<div className="list-panel-actions">
                         <button className="queue-button button-secondary" type="button" onClick={goBackArtwork} disabled={recentlyViewed.length < 2}>{t("back")}</button>
-                        {recentlyViewed.length > 0 && <button className="list-clear-button" type="button" onClick={() => setRecentlyViewed([])}>{t("clearAll")}</button>}
+                        {recentlyViewed.length > 0 && <button className="list-clear-button" type="button" onClick={() => mutateRecentlyViewed((stack) => stack.clear())}>{t("clearAll")}</button>}
                     </div>}>
                         <div id="historyContainer">
                             {recentlyViewed.length === 0 ? <EmptyVisitState icon="◷" message={t("noHistory")} hint={t("emptyHistoryHint")} collectionLabel={t("collection")} /> : recentlyViewed.map((artwork) => (
-                                <ListItem key={artwork.id} artwork={artwork} onOpen={() => openArtwork(artwork)} onRemove={() => setRecentlyViewed((items) => items.filter((item) => String(item.id) !== String(artwork.id)))} removeLabel={t("remove")} />
+                                <ListItem key={artwork.id} artwork={artwork} onOpen={() => openArtwork(artwork)} onRemove={() => mutateRecentlyViewed((stack) => {
+                                    const remaining = stack.toArray().filter((item) => String(item.id) !== String(artwork.id));
+                                    stack.clear();
+                                    for (let index = remaining.length - 1; index >= 0; index -= 1) stack.push(remaining[index]);
+                                })} removeLabel={t("remove")} />
                             ))}
                         </div>
                     </VisitPanel>
                     <VisitPanel eyebrow={t("queueEyebrow")} title={t("queue")} action={<div className="list-panel-actions">
                         <button className="queue-button" type="button" onClick={viewNextFromQueue}>{t("viewNext")} <span aria-hidden="true">→</span></button>
-                        {viewingQueue.length > 0 && <button className="list-clear-button" type="button" onClick={() => setViewingQueue([])}>{t("clearAll")}</button>}
+                        {viewingQueue.length > 0 && <button className="list-clear-button" type="button" onClick={() => mutateViewingQueue((queue) => queue.clear())}>{t("clearAll")}</button>}
                     </div>}>
                         <div id="queueContainer">
                             {viewingQueue.length === 0 ? <EmptyVisitState icon="＋" message={t("noQueue")} hint={t("emptyQueueHint")} collectionLabel={t("collection")} /> : viewingQueue.map((artwork) => (
-                                <ListItem key={artwork.id} artwork={artwork} onOpen={() => openArtwork(artwork, "queue")} onRemove={() => setViewingQueue((items) => items.filter((item) => String(item.id) !== String(artwork.id)))} removeLabel={t("remove")} />
+                                <ListItem key={artwork.id} artwork={artwork} onOpen={() => openArtwork(artwork, "queue")} onRemove={() => mutateViewingQueue((queue) => queue.removeWhere((item) => String(item.id) === String(artwork.id)))} removeLabel={t("remove")} />
                             ))}
                         </div>
                     </VisitPanel>
